@@ -22,7 +22,6 @@ import { AuthModule } from './auth/auth.module';
         password: configService.get('DB_PASSWORD'),
         database: configService.get('DB_DATABASE'),
         entities: [User],
-        synchronize: true, // Desactivar en producción
         logging: true,
       }),
     }),

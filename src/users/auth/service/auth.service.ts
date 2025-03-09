@@ -1,4 +1,3 @@
-// src/auth/auth.service.ts
 import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
@@ -31,11 +30,11 @@ export class AuthService {
     const payload = { 
       sub: user.id, 
       email: user.email,
-      nombre: user.nombre
+      nombre: user.nombre,
+      role: user.role
     };
 
     const secret = this.configService.get<string>('JWT_SECRET');
-    console.log(`Usando secret: ${secret?.substring(0, 3)}...`);
     
     return {
       access_token: await this.jwtService.signAsync(payload),
@@ -43,6 +42,7 @@ export class AuthService {
         id: user.id,
         nombre: user.nombre,
         email: user.email,
+        role: user.role
       },
     };
   }

@@ -9,6 +9,11 @@ import {
 } from 'typeorm';
 import * as bcrypt from 'bcrypt';
 
+export enum UserRole {
+    ADMIN = 'admin',
+    CAJERO = 'cajero'
+}
+
 @Entity('users')
 export class User {
     @PrimaryGeneratedColumn('uuid')
@@ -41,6 +46,13 @@ export class User {
     @UpdateDateColumn({ name: 'updated_at' })
     updatedAt: Date;
 
+    @Column({
+        type: 'enum',
+        enum: UserRole,
+        default: UserRole.ADMIN
+    })
+    role: UserRole;
+
     @BeforeInsert()
     @BeforeUpdate()
     async hashPassword() {
@@ -52,5 +64,13 @@ export class User {
 
     async validatePassword(password: string): Promise<boolean> {
         return bcrypt.compare(password, this.password);
+    }
+
+    isAdmin(): boolean {
+        return this.role === UserRole.ADMIN;
+    }
+
+    isCajero(): boolean {
+        return this.role === UserRole.CAJERO;
     }
 }

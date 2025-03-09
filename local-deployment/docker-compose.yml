@@ -14,20 +14,6 @@ services:
     networks:
       - nest-network
 
-  pgadmin:
-    image: dpage/pgadmin4
-    container_name: nest-crud-pgadmin
-    environment:
-      PGADMIN_DEFAULT_EMAIL: admin@admin.com
-      PGADMIN_DEFAULT_PASSWORD: admin
-    ports:
-      - "5050:80"
-    depends_on:
-      - postgres
-    networks:
-      - nest-network
-    restart: unless-stopped
-
 networks:
   nest-network:
     driver: bridge
