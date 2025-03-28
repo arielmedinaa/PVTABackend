@@ -20,6 +20,7 @@ import { User } from '../users/models/user.entity';
         database: configService.get('DB_DATABASE'),
         entities: [User],
         logging: true,
+        synchronize: false
       }),
     }),
   ],

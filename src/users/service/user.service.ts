@@ -1,19 +1,22 @@
-import { Injectable, NotFoundException, ConflictException } from '@nestjs/common';
+import { Injectable, NotFoundException, ConflictException, Inject } from '@nestjs/common';
 import { User } from '../models/user.entity';
 import { CreateUserDto } from '../models/dto/create-user.dto';
 import { UpdateUserDto } from '../models/dto/update-user.dto';
 import { DatabaseService } from '../../database/service/database.service';
 import { ConnectionContextService } from '../../database/context/connection-context.service';
+import { REQUEST } from '@nestjs/core';
 
 @Injectable()
 export class UserService {
     constructor(
         private databaseService: DatabaseService,
-        private connectionContext: ConnectionContextService
+        private connectionContext: ConnectionContextService,
+        @Inject(REQUEST) private readonly request: any
     ) {}
 
     private async getUserRepository() {
-        const licenseData = this.connectionContext.getLicenseData();
+        const requestId = this.request.requestId;
+        const licenseData = this.connectionContext.getLicenseData(requestId);
         if (!licenseData) {
             throw new Error('No license data available for database connection');
         }

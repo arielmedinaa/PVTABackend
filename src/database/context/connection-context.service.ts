@@ -1,14 +1,18 @@
-import { Injectable, Scope } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 
-@Injectable({ scope: Scope.REQUEST })
+@Injectable()
 export class ConnectionContextService {
-  private licenseData: any = null;
+  private static licenseDataMap = new Map<string, any>();
 
-  setLicenseData(data: any) {
-    this.licenseData = data;
+  setLicenseData(requestId: string, data: any) {
+    ConnectionContextService.licenseDataMap.set(requestId, data);
   }
 
-  getLicenseData() {
-    return this.licenseData;
+  getLicenseData(requestId: string) {
+    return ConnectionContextService.licenseDataMap.get(requestId);
+  }
+
+  clearLicenseData(requestId: string) {
+    ConnectionContextService.licenseDataMap.delete(requestId);
   }
 }
