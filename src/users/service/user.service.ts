@@ -1,19 +1,31 @@
 import { Injectable, NotFoundException, ConflictException } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
 import { User } from '../models/user.entity';
-import { Repository } from 'typeorm';
 import { CreateUserDto } from '../models/dto/create-user.dto';
 import { UpdateUserDto } from '../models/dto/update-user.dto';
+import { DatabaseService } from '../../database/service/database.service';
+import { ConnectionContextService } from '../../database/context/connection-context.service';
 
 @Injectable()
 export class UserService {
     constructor(
-        @InjectRepository(User)
-        private usersRepository: Repository<User>,
-    ) { }
+        private databaseService: DatabaseService,
+        private connectionContext: ConnectionContextService
+    ) {}
+
+    private async getUserRepository() {
+        const licenseData = this.connectionContext.getLicenseData();
+        if (!licenseData) {
+            throw new Error('No license data available for database connection');
+        }
+        
+        const dataSource = await this.databaseService.createDataSource(licenseData);
+        return dataSource.getRepository(User);
+    }
 
     async create(createUserDto: CreateUserDto): Promise<User> {
-        const existingUser = await this.usersRepository.findOne({
+        const usersRepository = await this.getUserRepository();
+        
+        const existingUser = await usersRepository.findOne({
             where: { email: createUserDto.email }
         });
 
@@ -21,16 +33,18 @@ export class UserService {
             throw new ConflictException(`El usuario con email ${createUserDto.email} ya existe`);
         }
 
-        const user = this.usersRepository.create(createUserDto);
-        return this.usersRepository.save(user);
+        const user = usersRepository.create(createUserDto);
+        return usersRepository.save(user);
     }
 
-    findAll(): Promise<User[]> {
-        return this.usersRepository.find();
+    async findAll(): Promise<User[]> {
+        const usersRepository = await this.getUserRepository();
+        return usersRepository.find();
     }
 
     async findOne(id: string): Promise<User> {
-        const user = await this.usersRepository.findOne({ where: { id } });
+        const usersRepository = await this.getUserRepository();
+        const user = await usersRepository.findOne({ where: { id } });
 
         if (!user) {
             throw new NotFoundException(`Usuario con ID ${id} no encontrado`);
@@ -40,15 +54,17 @@ export class UserService {
     }
 
     async findByEmail(email: string): Promise<User | null> {
-        const user = await this.usersRepository.findOne({ where: { email } });
+        const usersRepository = await this.getUserRepository();
+        const user = await usersRepository.findOne({ where: { email } });
         return user;
     }
 
     async update(id: string, updateUserDto: UpdateUserDto): Promise<User> {
+        const usersRepository = await this.getUserRepository();
         const user = await this.findOne(id);
 
         if (updateUserDto.email && updateUserDto.email !== user.email) {
-            const existingUser = await this.usersRepository.findOne({
+            const existingUser = await usersRepository.findOne({
                 where: { email: updateUserDto.email }
             });
 
@@ -57,12 +73,13 @@ export class UserService {
             }
         }
 
-        this.usersRepository.merge(user, updateUserDto);
-        return this.usersRepository.save(user);
+        usersRepository.merge(user, updateUserDto);
+        return usersRepository.save(user);
     }
 
     async remove(id: string): Promise<User> {
+        const usersRepository = await this.getUserRepository();
         const user = await this.findOne(id);
-        return this.usersRepository.remove(user);
+        return usersRepository.remove(user);
     }
 }
